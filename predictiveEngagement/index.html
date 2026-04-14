@@ -138,6 +138,10 @@
     }
 
     function addToCart(productId) {
+		Genesys("command", "Journey.pageview", {
+		  pageTitle: "Product",
+		  pageLocation: "/product"
+		});
       const product = products.find(p => p.id === productId);
       cart.push(product);
       renderCart();
@@ -160,6 +164,11 @@
 	}
 
     function renderCart() {
+		Genesys("command", "Journey.pageview", {
+		  pageTitle: "Cart",
+		  pageLocation: "/cart"
+		});
+		
       if (cart.length === 0) {
         cartDiv.innerHTML = `<p>Tu carrito está vacío.</p>`;
         return;
@@ -270,6 +279,11 @@
 	}
 
     // Inicializar
+	  Genesys("command", "Journey.pageview", {
+		  pageTitle: "Home",
+		  pageLocation: "/home"
+		});
+	  
     renderProducts();
     renderCart();
   </script>
