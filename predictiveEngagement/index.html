@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GStore - Simulador de Venta</title>
+  <img src="imagen (1).png">
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      max-width: 900px;
+      margin-inline: auto;
+    }
+    .product, .cart-item {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    .button {
+      background-color: #2563eb;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .button:hover {
+      background-color: #1d4ed8;
+    }
+    .chat-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>GStore - Simulador de Venta</h1>
+  <div style="margin-bottom: 20px;">
+  <button onclick="abrirChat()" class="button">Ayuda</button>
+  <button onclick="window.location.href='preguntas.html'" class="button" style="background-color: gray;">Preguntas Frecuentes</button>
+
+
+</div>
+
+<div id="faqSection" class="hidden" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 10px;">
+  <h3>Preguntas Frecuentes</h3>
+  <div id="genesys-support-center"></div>
+</div>
+
+  <div id="products"></div>
+
+  <h2>Carrito</h2>
+  <div id="cart"></div>
+
+  <div id="checkout" class="hidden">
+    <h2>Confirmación de Compra</h2>
+
+    <form id="checkoutForm" onsubmit="return procesarCompra()" style="margin-bottom: 16px;">
+      <label>Nombre completo<br/><input type="text" id="nombreCliente" required /></label><br/><br/>
+      <label>Teléfono<br/><input type="tel" id="telefonoCliente" required /></label><br/><br/>
+      <label>Correo electrónico<br/><input type="email" id="correoCliente" required /></label><br/><br/>
+      <button type="submit" class="button">Finalizar compra</button>
+    </form>
+
+    <div id="resumenCompra" style="display: none;">
+      <p id="mensajeGracias"></p>
+      <p id="idPedidoTexto"></p>
+      <button class="button" onclick="volverAlInicio()">Volver al inicio</button>
+    </div>
+  </div>
+
+
+  <div id="chatBox" class="chat-box hidden">
+    <p>¿Necesitas ayuda con tu compra?</p>
+    <button class="button" onclick="iniciarChat()">Iniciar chat</button>
+  </div>
+
+  <!-- Genesys Cloud Web Messaging -->
+  <script type="text/javascript" charset="utf-8">
+	  (function (g, e, n, es, ys) {
+		g['_genesysJs'] = e;
+		g[e] = g[e] || function () {
+		  (g[e].q = g[e].q || []).push(arguments)
+		};
+		g[e].t = 1 * new Date();
+		g[e].c = es;
+		ys = document.createElement('script'); ys.async = 1; ys.src = n; ys.charset = 'utf-8'; document.head.appendChild(ys);
+	  })(window, 'Genesys', 'https://apps.mypurecloud.com/genesys-bootstrap/genesys.min.js', {
+		environment: 'prod',
+		deploymentId: '2f3b1c03-3693-4d23-ae7c-1cac520269a4'
+	  });
+	  
+	  
+	</script>
+
+  <script>
+    const products = [
+      { id: 1, name: "Televisor 55\" UHD", price: 1800 },
+      { id: 2, name: "Celular SmartX Pro", price: 1200 },
+      { id: 3, name: "Aspiradora Robot 3000", price: 900 },
+    ];
+
+    let cart = [];
+    let chatVisible = false;
+
+    const productsDiv = document.getElementById("products");
+    const cartDiv = document.getElementById("cart");
+    const checkoutDiv = document.getElementById("checkout");
+    const chatBox = document.getElementById("chatBox");
+
+    function renderProducts() {
+      productsDiv.innerHTML = '';
+      products.forEach(product => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `
+          <h3>${product.name}</h3>
+          <p>Precio: $${product.price}</p>
+          <button class="button" onclick="addToCart(${product.id})">Agregar al carrito</button>
+        `;
+        productsDiv.appendChild(div);
+      });
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      cart.push(product);
+      renderCart();
+
+      if (!chatVisible) {
+        chatVisible = true;
+        //chatBox.classList.remove("hidden");
+      }
+    }
+
+    function removeFromCart(index) {
+	  cart.splice(index, 1);
+	  renderCart();
+	  if (cart.length === 0) {
+      const evento = { target: { id: "btnAbandono" } };
+      if (evento.target.id === "btnAbandono") {
+        Genesys("command", "Journey.record", { eventName: "form_abandoned" });
+      }
+	  }
+	}
+
+    function renderCart() {
+      if (cart.length === 0) {
+        cartDiv.innerHTML = `<p>Tu carrito está vacío.</p>`;
+        return;
+      }
+
+      let html = `<ul>`;
+      let total = 0;
+      cart.forEach((item, index) => {
+        total += item.price;
+        html += `
+          <li class="cart-item">
+            ${item.name} - $${item.price}
+            <button class="button" style="background:#dc2626" onclick="removeFromCart(${index})">Quitar</button>
+          </li>`;
+      });
+      html += `</ul>
+        <p><strong>Total:</strong> $${total}</p>
+        <button class="button" style="background:#16a34a" onclick="confirmarCompra()">Ir a pagar</button>`;
+
+      cartDiv.innerHTML = html;
+    }
+
+    function confirmarCompra() {
+      productsDiv.classList.add("hidden");
+      cartDiv.classList.add("hidden");
+      chatBox.classList.add("hidden");
+      checkoutDiv.classList.remove("hidden");
+
+      checkoutIdleTimer = setTimeout(() => {
+        Genesys("command", "Journey.record", {
+        eventName: "form_idle",
+        customAttributes: {
+          origen: "checkout"          
+        }
+      });
+      }, 10000);
+    }
+
+    function procesarCompra() {
+      clearTimeout(checkoutIdleTimer);
+      const nombre = document.getElementById("nombreCliente").value.trim();
+      const telefono = document.getElementById("telefonoCliente").value.trim();
+      const correo = document.getElementById("correoCliente").value.trim();
+
+      if (!nombre || !telefono || !correo) {
+        alert("Por favor completa todos los campos.");
+        return false;
+      }
+
+      const totalCompra = cart.reduce((sum, item) => sum + item.price, 0);
+      orderId = "ORD-" + Math.floor(Math.random() * 1000000);
+
+      // Mostrar resumen
+      document.getElementById("checkoutForm").style.display = "none";
+      document.getElementById("resumenCompra").style.display = "block";
+      document.getElementById("mensajeGracias").innerText = `¡Gracias por tu compra, ${nombre}! Un asesor te contactará pronto.`;
+      document.getElementById("idPedidoTexto").innerHTML = `<strong>ID del pedido:</strong> ${orderId}`;
+
+      // Enviar evento a Genesys
+      Genesys("command", "Journey.record", {
+        eventName: "crear_workitem",
+        customAttributes: {
+          origen: "checkout",
+          totalCompra: totalCompra,
+          orderId: orderId,
+          nombreCliente: nombre,
+          telefonoCliente: telefono,
+          correoCliente: correo
+        }
+      });
+
+      return false; // Previene recarga del formulario
+    }
+
+    function volverAlInicio() {
+      cart = [];
+      chatVisible = false;
+      checkoutDiv.classList.add("hidden");
+      productsDiv.classList.remove("hidden");
+      cartDiv.classList.remove("hidden");
+      renderCart();
+    }
+	
+	function toogleMessenger(){			
+			
+		Genesys("command", "Messenger.open", {},
+			function(o){
+			console.log("abre ventana");
+			},
+			function(o){
+			Genesys("command", "Messenger.close");
+			console.log("cierra ventana");
+			}
+		);
+	}
+
+    function iniciarChat() {
+      toogleMessenger()
+    }
+	
+	function abrirChat() {
+	  toogleMessenger()
+	}
+
+	function mostrarFAQs() {
+	  const section = document.getElementById("faqSection");
+	  section.classList.toggle("hidden");
+	}
+
+    // Inicializar
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
