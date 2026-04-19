@@ -45,7 +45,7 @@
   </style>
 </head>
 <body>
-  <h1>Simulador de Venta</h1>
+  <h1>Simulador de Ventas</h1>
   <div style="margin-bottom: 20px;">
   <button onclick="abrirChat()" class="button">Ayuda</button>
   <button onclick="window.location.href='preguntas.html'" class="button" style="background-color: gray;">Preguntas Frecuentes</button>
@@ -139,8 +139,8 @@
 		
 		// Enviar evento con información del producto
 	  Genesys("command", "Journey.record", {
-	    pageTitle: "Product",
-	    pageLocation: "/product",
+	    eventName: "Product_Added",
+	    
 	    customAttributes: {
 	      productId: product.id,
 	      productName: product.name,
