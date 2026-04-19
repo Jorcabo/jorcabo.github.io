@@ -134,11 +134,21 @@
     }
 
     function addToCart(productId) {
-		Genesys("command", "Journey.pageview", {
-		  pageTitle: "Product",
-		  pageLocation: "/product"
-		});
-      const product = products.find(p => p.id === productId);
+
+		const product = products.find(p => p.id === productId);
+		
+		// Enviar evento con información del producto
+	  Genesys("command", "Journey.pageview", {
+	    pageTitle: "Product",
+	    pageLocation: "/product",
+	    customAttributes: {
+	      productId: product.id,
+	      productName: product.name,
+	      productPrice: product.price
+	    }
+	  });
+
+		
       cart.push(product);
       renderCart();
 
