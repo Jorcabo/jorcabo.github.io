@@ -45,7 +45,7 @@
   </style>
 </head>
 <body>
-  <h1>Simulador de Ventas</h1>
+  <h1>Simulador de Venta</h1>
   <div style="margin-bottom: 20px;">
   <button onclick="abrirChat()" class="button">Ayuda</button>
   <button onclick="window.location.href='preguntas.html'" class="button" style="background-color: gray;">Preguntas Frecuentes</button>
@@ -138,7 +138,7 @@
 		const product = products.find(p => p.id === productId);
 		
 		// Enviar evento con información del producto
-	  Genesys("command", "Journey.pageview", {
+	  Genesys("command", "Journey.record", {
 	    pageTitle: "Product",
 	    pageLocation: "/product",
 	    customAttributes: {
